@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${isNew ? 'Add Team Member' : 'Edit Team Member'} + ' — Project Manager'">Member Form</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('team')}"></div>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <button class="menu-toggle" id="menuToggle">☰</button>
+                <h2 th:text="${isNew ? 'Add Team Member' : 'Edit Team Member'}">Member Form</h2>
+                <p th:text="${isNew ? 'Add a new team member' : 'Update member details'}">Form</p>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="card form-container">
+                <form th:action="@{/team/save}" method="post" th:object="${member}">
+                    <input type="hidden" th:field="*{id}">
+
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input type="text" id="name" class="form-control" th:field="*{name}"
+                               placeholder="Enter full name" required>
+                        <div th:if="${#fields.hasErrors('name')}" class="form-error" th:errors="*{name}">Error</div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" class="form-control" th:field="*{email}"
+                                   placeholder="name@company.com" required>
+                            <div th:if="${#fields.hasErrors('email')}" class="form-error" th:errors="*{email}">Error</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="role">Role *</label>
+                            <select id="role" class="form-control" th:field="*{role}" required>
+                                <option value="">— Select Role —</option>
+                                <option th:each="r : ${roles}" th:value="${r}" th:text="${r.displayName}">Role</option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('role')}" class="form-error" th:errors="*{role}">Error</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="tel" id="phone" class="form-control" th:field="*{phone}"
+                               placeholder="+1 (555) 000-0000">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary"
+                                th:text="${isNew ? 'Add Member' : 'Update Member'}">Save</button>
+                        <a th:href="@{/team}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

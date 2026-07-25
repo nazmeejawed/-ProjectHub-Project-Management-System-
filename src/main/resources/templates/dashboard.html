@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Project Manager</title>
+    <meta name="description" content="Zoho-style Project Management Dashboard">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-layout">
+
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <button class="menu-toggle" id="menuToggle">☰</button>
+                <h2>Home</h2>
+            </div>
+        </div>
+
+        <div class="page-body">
+
+            <!-- Success Alert -->
+            <div th:if="${successMessage}" class="alert alert-success">
+                <span>✓</span>
+                <span th:text="${successMessage}"></span>
+            </div>
+
+            <!-- Dashboard Title Bar -->
+            <div class="dashboard-title-bar">
+                <h3>
+                    Global Dashboard <span class="star" id="starToggle">☆</span>
+                </h3>
+                <div class="header-actions">
+                    <button class="add-widget-btn" id="addWidgetBtn">+ Add Widget</button>
+                    <button class="more-btn">⋯</button>
+                </div>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="stats-grid" id="widget-stats-row" data-widget-id="stats-row">
+                <div class="stat-card" id="stat-open-tasks">
+                    <div class="stat-info">
+                        <h3 class="stat-number" th:text="${todoTasks + inProgressTasks + inReviewTasks}">0</h3>
+                        <p>Open Tasks</p>
+                    </div>
+                </div>
+                <div class="stat-card" id="stat-closed-tasks">
+                    <div class="stat-info">
+                        <h3 class="stat-number" th:text="${doneTasks}">0</h3>
+                        <p>Closed Tasks</p>
+                    </div>
+                </div>
+                <div class="stat-card" id="stat-total-projects">
+                    <div class="stat-info">
+                        <h3 class="stat-number" th:text="${totalProjects}">0</h3>
+                        <p>Total Projects</p>
+                    </div>
+                </div>
+                <div class="stat-card" id="stat-overdue">
+                    <div class="stat-info">
+                        <h3 class="stat-number" th:text="${overdueCount}">0</h3>
+                        <p>Overdue</p>
+                    </div>
+                </div>
+                <div class="stat-card" id="stat-active-projects">
+                    <div class="stat-info">
+                        <h3 class="stat-number" th:text="${activeProjects}">0</h3>
+                        <p>Active Projects</p>
+                    </div>
+                </div>
+                <div class="stat-card" id="stat-team-members">
+                    <div class="stat-info">
+                        <h3 class="stat-number" th:text="${totalMembers}">0</h3>
+                        <p>Team Members</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="dashboard-grid" id="dashboardGrid">
+
+                <!-- Widget: Task Distribution -->
+                <div class="card dashboard-widget" id="widget-task-distribution" data-widget-id="task-distribution">
+                    <div class="section-header">
+                        <h3><span class="header-icon">📋</span> Task Distribution</h3>
+                        <a th:href="@{/tasks}" class="view-all">View all →</a>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-bar-group">
+                            <div class="chart-bar-label">
+                                <span>To Do</span>
+                                <span th:text="${todoTasks}">0</span>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="chart-bar-fill todo" data-width="0"
+                                     th:attr="data-width=${totalTasks > 0 ? (todoTasks * 100 / totalTasks) : 0}"></div>
+                            </div>
+                        </div>
+                        <div class="chart-bar-group">
+                            <div class="chart-bar-label">
+                                <span>In Progress</span>
+                                <span th:text="${inProgressTasks}">0</span>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="chart-bar-fill in-progress" data-width="0"
+                                     th:attr="data-width=${totalTasks > 0 ? (inProgressTasks * 100 / totalTasks) : 0}"></div>
+                            </div>
+                        </div>
+                        <div class="chart-bar-group">
+                            <div class="chart-bar-label">
+                                <span>In Review</span>
+                                <span th:text="${inReviewTasks}">0</span>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="chart-bar-fill in-review" data-width="0"
+                                     th:attr="data-width=${totalTasks > 0 ? (inReviewTasks * 100 / totalTasks) : 0}"></div>
+                            </div>
+                        </div>
+                        <div class="chart-bar-group">
+                            <div class="chart-bar-label">
+                                <span>Done</span>
+                                <span th:text="${doneTasks}">0</span>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="chart-bar-fill done" data-width="0"
+                                     th:attr="data-width=${totalTasks > 0 ? (doneTasks * 100 / totalTasks) : 0}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Widget: Upcoming Deadlines -->
+                <div class="card dashboard-widget" id="widget-upcoming-deadlines" data-widget-id="upcoming-deadlines">
+                    <div class="section-header">
+                        <h3><span class="header-icon">🕐</span> Upcoming Deadlines</h3>
+                        <a th:href="@{/tasks}" class="view-all">View all →</a>
+                    </div>
+                    <div class="task-list" th:if="${upcomingDeadlines != null && !upcomingDeadlines.isEmpty()}">
+                        <div class="task-item" th:each="task : ${upcomingDeadlines}">
+                            <span class="task-title" th:text="${task.title}"
+                                  th:classappend="${task.overdue ? ' overdue' : ''}">Task</span>
+                            <div class="task-meta">
+                                <span class="badge"
+                                      th:classappend="'badge-' + ${task.priority.name().toLowerCase()}"
+                                      th:text="${task.priority.displayName}">Medium</span>
+                                <span th:text="${task.deadline}">2026-01-01</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="empty-state" th:if="${upcomingDeadlines == null || upcomingDeadlines.isEmpty()}" style="padding: 30px 10px;">
+                        <div class="empty-icon">🕐</div>
+                        <p>No upcoming deadlines</p>
+                    </div>
+                </div>
+
+                <!-- Widget: Overdue Tasks -->
+                <div class="card dashboard-widget" id="widget-overdue-tasks" data-widget-id="overdue-tasks">
+                    <div class="section-header">
+                        <h3><span class="header-icon">⚠️</span> Overdue Tasks</h3>
+                        <a th:href="@{/tasks}" class="view-all">View all →</a>
+                    </div>
+                    <div class="task-list" th:if="${overdueTasks != null && !overdueTasks.isEmpty()}">
+                        <div class="task-item" th:each="task : ${overdueTasks}">
+                            <span class="task-title overdue" th:text="${task.title}">Task</span>
+                            <div class="task-meta">
+                                <span class="badge"
+                                      th:classappend="'badge-' + ${task.priority.name().toLowerCase()}"
+                                      th:text="${task.priority.displayName}">High</span>
+                                <span th:text="${task.deadline}">2026-01-01</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="empty-state" th:if="${overdueTasks == null || overdueTasks.isEmpty()}" style="padding: 30px 10px;">
+                        <div class="empty-icon">✅</div>
+                        <p>No overdue tasks. Great work!</p>
+                    </div>
+                </div>
+
+                <!-- Widget: Project Status -->
+                <div class="card dashboard-widget" id="widget-project-status" data-widget-id="project-status">
+                    <div class="section-header">
+                        <h3><span class="header-icon">📊</span> Project Status</h3>
+                        <a th:href="@{/projects}" class="view-all">View all →</a>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-bar-group">
+                            <div class="chart-bar-label">
+                                <span>Planning</span>
+                                <span th:text="${planningProjects}">0</span>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="chart-bar-fill in-progress" data-width="0"
+                                     th:attr="data-width=${totalProjects > 0 ? (planningProjects * 100 / totalProjects) : 0}"></div>
+                            </div>
+                        </div>
+                        <div class="chart-bar-group">
+                            <div class="chart-bar-label">
+                                <span>In Progress</span>
+                                <span th:text="${activeProjects}">0</span>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="chart-bar-fill in-progress" data-width="0"
+                                     th:attr="data-width=${totalProjects > 0 ? (activeProjects * 100 / totalProjects) : 0}"></div>
+                            </div>
+                        </div>
+                        <div class="chart-bar-group">
+                            <div class="chart-bar-label">
+                                <span>Completed</span>
+                                <span th:text="${completedProjects}">0</span>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="chart-bar-fill done" data-width="0"
+                                     th:attr="data-width=${totalProjects > 0 ? (completedProjects * 100 / totalProjects) : 0}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Widget: Tasks by Priority (HIDDEN by default — can be added via Add Widget) -->
+                <div class="card dashboard-widget" id="widget-tasks-by-priority" data-widget-id="tasks-by-priority" style="display:none;">
+                    <div class="section-header">
+                        <h3><span class="header-icon">🔥</span> Tasks by Priority</h3>
+                        <a th:href="@{/tasks}" class="view-all">View all →</a>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-bar-group">
+                            <div class="chart-bar-label">
+                                <span>Critical</span>
+                                <span th:text="${criticalPriorityTasks}">0</span>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="chart-bar-fill todo" style="background: linear-gradient(90deg, #ef4444, #f87171);" data-width="0"
+                                     th:attr="data-width=${totalTasks > 0 ? (criticalPriorityTasks * 100 / totalTasks) : 0}"></div>
+                            </div>
+                        </div>
+                        <div class="chart-bar-group">
+                            <div class="chart-bar-label">
+                                <span>High</span>
+                                <span th:text="${highPriorityTasks}">0</span>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="chart-bar-fill todo" style="background: linear-gradient(90deg, #f97316, #fb923c);" data-width="0"
+                                     th:attr="data-width=${totalTasks > 0 ? (highPriorityTasks * 100 / totalTasks) : 0}"></div>
+                            </div>
+                        </div>
+                        <div class="chart-bar-group">
+                            <div class="chart-bar-label">
+                                <span>Medium</span>
+                                <span th:text="${mediumPriorityTasks}">0</span>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="chart-bar-fill todo" style="background: linear-gradient(90deg, #f59e0b, #fbbf24);" data-width="0"
+                                     th:attr="data-width=${totalTasks > 0 ? (mediumPriorityTasks * 100 / totalTasks) : 0}"></div>
+                            </div>
+                        </div>
+                        <div class="chart-bar-group">
+                            <div class="chart-bar-label">
+                                <span>Low</span>
+                                <span th:text="${lowPriorityTasks}">0</span>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="chart-bar-fill todo" style="background: linear-gradient(90deg, #3b82f6, #60a5fa);" data-width="0"
+                                     th:attr="data-width=${totalTasks > 0 ? (lowPriorityTasks * 100 / totalTasks) : 0}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Widget: Today's Tasks (HIDDEN by default) -->
+                <div class="card dashboard-widget" id="widget-todays-tasks" data-widget-id="todays-tasks" style="display:none;">
+                    <div class="section-header">
+                        <h3><span class="header-icon">📅</span> Today's Tasks</h3>
+                        <a th:href="@{/tasks}" class="view-all">View all →</a>
+                    </div>
+                    <div class="task-list" th:if="${todayTasks != null && !todayTasks.isEmpty()}">
+                        <div class="task-item" th:each="task : ${todayTasks}">
+                            <span class="task-title" th:text="${task.title}">Task</span>
+                            <div class="task-meta">
+                                <span class="badge"
+                                      th:classappend="'badge-' + ${task.status.name().toLowerCase()}"
+                                      th:text="${task.status.displayName}">Status</span>
+                                <span class="badge"
+                                      th:classappend="'badge-' + ${task.priority.name().toLowerCase()}"
+                                      th:text="${task.priority.displayName}">Priority</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="empty-state" th:if="${todayTasks == null || todayTasks.isEmpty()}" style="padding: 30px 10px;">
+                        <div class="empty-icon">📅</div>
+                        <p>No tasks due today</p>
+                    </div>
+                </div>
+
+                <!-- Widget: Team Workload (HIDDEN by default) -->
+                <div class="card dashboard-widget" id="widget-team-workload" data-widget-id="team-workload" style="display:none;">
+                    <div class="section-header">
+                        <h3><span class="header-icon">👥</span> Team Workload</h3>
+                        <a th:href="@{/team}" class="view-all">View all →</a>
+                    </div>
+                    <div th:if="${teamMembers != null && !teamMembers.isEmpty()}">
+                        <div class="task-list">
+                            <div class="task-item" th:each="member : ${teamMembers}">
+                                <div class="member-avatar" style="width:32px;height:32px;font-size:0.72rem;" th:text="${member.initials}">AB</div>
+                                <span class="task-title" th:text="${member.name}">Name</span>
+                                <div class="task-meta">
+                                    <span class="badge"
+                                          th:classappend="'badge-' + ${member.role.name().toLowerCase()}"
+                                          th:text="${member.role.displayName}">Role</span>
+                                    <span th:text="${member.tasks.size()} + ' tasks'">0 tasks</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="empty-state" th:if="${teamMembers == null || teamMembers.isEmpty()}" style="padding: 30px 10px;">
+                        <div class="empty-icon">👥</div>
+                        <p>No team members yet</p>
+                    </div>
+                </div>
+
+                <!-- Widget: Recent Open Tasks (HIDDEN by default) -->
+                <div class="card dashboard-widget" id="widget-recent-open-tasks" data-widget-id="recent-open-tasks" style="display:none;">
+                    <div class="section-header">
+                        <h3><span class="header-icon">🆕</span> Recent Open Tasks</h3>
+                        <a th:href="@{/tasks}" class="view-all">View all →</a>
+                    </div>
+                    <div class="task-list" th:if="${recentOpenTasks != null && !recentOpenTasks.isEmpty()}">
+                        <div class="task-item" th:each="task : ${recentOpenTasks}">
+                            <span class="task-title" th:text="${task.title}">Task</span>
+                            <div class="task-meta">
+                                <span class="badge"
+                                      th:classappend="'badge-' + ${task.status.name().toLowerCase()}"
+                                      th:text="${task.status.displayName}">Status</span>
+                                <span th:if="${task.assignee != null}" th:text="${task.assignee.name}">—</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="empty-state" th:if="${recentOpenTasks == null || recentOpenTasks.isEmpty()}" style="padding: 30px 10px;">
+                        <div class="empty-icon">✅</div>
+                        <p>No open tasks</p>
+                    </div>
+                </div>
+
+                <!-- Widget: Recent Projects (Full width, always visible) -->
+                <div class="card dashboard-widget" style="grid-column: 1 / -1;" id="widget-recent-projects" data-widget-id="recent-projects">
+                    <div class="section-header">
+                        <h3><span class="header-icon">📁</span> Recent Projects</h3>
+                        <a th:href="@{/projects}" class="view-all">View all →</a>
+                    </div>
+                    <div th:if="${recentProjects != null && !recentProjects.isEmpty()}">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Project</th>
+                                        <th>Status</th>
+                                        <th>Progress</th>
+                                        <th>Manager</th>
+                                        <th>Dates</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="project : ${recentProjects}">
+                                        <td>
+                                            <a th:href="@{/projects/{id}(id=${project.id})}" class="table-link"
+                                               th:text="${project.name}">Project Name</a>
+                                        </td>
+                                        <td>
+                                            <span class="badge"
+                                                  th:classappend="'badge-' + ${project.status.name().toLowerCase()}"
+                                                  th:text="${project.status.displayName}">Status</span>
+                                        </td>
+                                        <td style="min-width: 120px;">
+                                            <div class="progress-bar">
+                                                <div class="progress-bar-fill" data-progress="0"
+                                                     th:attr="data-progress=${project.progressPercent}"></div>
+                                            </div>
+                                            <div class="progress-label" th:text="${project.progressPercent} + '%'">0%</div>
+                                        </td>
+                                        <td>
+                                            <span th:if="${project.manager != null}" th:text="${project.manager.name}">—</span>
+                                            <span th:if="${project.manager == null}" class="text-muted">Unassigned</span>
+                                        </td>
+                                        <td class="text-muted">
+                                            <span th:if="${project.startDate != null}" th:text="${project.startDate}">—</span>
+                                            <span th:if="${project.endDate != null}"> → </span>
+                                            <span th:if="${project.endDate != null}" th:text="${project.endDate}">—</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="empty-state" th:if="${recentProjects == null || recentProjects.isEmpty()}" style="padding: 30px 10px;">
+                        <div class="empty-icon">📁</div>
+                        <h3>No projects yet</h3>
+                        <p>Create your first project to get started.</p>
+                        <a th:href="@{/projects/new}" class="btn btn-primary">+ New Project</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Add Widget Modal -->
+<div class="widget-modal-overlay" id="widgetModalOverlay">
+    <div class="widget-modal">
+        <div class="widget-modal-header">
+            <h3>Add Widget</h3>
+            <p>Select widgets to show on your dashboard</p>
+            <button class="widget-modal-close" id="widgetModalClose">✕</button>
+        </div>
+        <div class="widget-modal-body">
+
+            <div class="widget-option" data-target="stats-row">
+                <div class="widget-option-info">
+                    <span class="widget-option-icon">📊</span>
+                    <div>
+                        <h4>Stats Counter Row</h4>
+                        <p>Shows Open Tasks, Closed Tasks, Projects, Overdue, Active Projects, Team Members counters</p>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked data-widget-toggle="stats-row">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="widget-option" data-target="task-distribution">
+                <div class="widget-option-info">
+                    <span class="widget-option-icon">📋</span>
+                    <div>
+                        <h4>Task Distribution</h4>
+                        <p>Bar chart showing tasks by status (To Do, In Progress, In Review, Done)</p>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked data-widget-toggle="task-distribution">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="widget-option" data-target="upcoming-deadlines">
+                <div class="widget-option-info">
+                    <span class="widget-option-icon">🕐</span>
+                    <div>
+                        <h4>Upcoming Deadlines</h4>
+                        <p>List of tasks with upcoming deadlines sorted by date</p>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked data-widget-toggle="upcoming-deadlines">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="widget-option" data-target="overdue-tasks">
+                <div class="widget-option-info">
+                    <span class="widget-option-icon">⚠️</span>
+                    <div>
+                        <h4>Overdue Tasks</h4>
+                        <p>Tasks that have passed their deadline and are not completed</p>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked data-widget-toggle="overdue-tasks">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="widget-option" data-target="project-status">
+                <div class="widget-option-info">
+                    <span class="widget-option-icon">📊</span>
+                    <div>
+                        <h4>Project Status</h4>
+                        <p>Bar chart showing projects by status (Planning, In Progress, Completed)</p>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked data-widget-toggle="project-status">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="widget-option" data-target="tasks-by-priority">
+                <div class="widget-option-info">
+                    <span class="widget-option-icon">🔥</span>
+                    <div>
+                        <h4>Tasks by Priority</h4>
+                        <p>Bar chart showing tasks by priority level (Critical, High, Medium, Low)</p>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" data-widget-toggle="tasks-by-priority">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="widget-option" data-target="todays-tasks">
+                <div class="widget-option-info">
+                    <span class="widget-option-icon">📅</span>
+                    <div>
+                        <h4>Today's Tasks</h4>
+                        <p>Tasks that are due today with their current status</p>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" data-widget-toggle="todays-tasks">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="widget-option" data-target="team-workload">
+                <div class="widget-option-info">
+                    <span class="widget-option-icon">👥</span>
+                    <div>
+                        <h4>Team Workload</h4>
+                        <p>Shows each team member with their assigned task count</p>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" data-widget-toggle="team-workload">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="widget-option" data-target="recent-open-tasks">
+                <div class="widget-option-info">
+                    <span class="widget-option-icon">🆕</span>
+                    <div>
+                        <h4>Recent Open Tasks</h4>
+                        <p>Most recently created tasks that are still open</p>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" data-widget-toggle="recent-open-tasks">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="widget-option" data-target="recent-projects">
+                <div class="widget-option-info">
+                    <span class="widget-option-icon">📁</span>
+                    <div>
+                        <h4>Recent Projects</h4>
+                        <p>Table showing latest projects with progress, manager and dates</p>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked data-widget-toggle="recent-projects">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+        </div>
+        <div class="widget-modal-footer">
+            <button class="btn btn-secondary" id="widgetModalCancel">Cancel</button>
+            <button class="btn btn-primary" id="widgetModalApply">Apply Changes</button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

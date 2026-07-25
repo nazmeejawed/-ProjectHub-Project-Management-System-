@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects — Project Manager</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('projects')}"></div>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <button class="menu-toggle" id="menuToggle">☰</button>
+                <h2>Projects</h2>
+                <p>Manage and track all your projects</p>
+            </div>
+            <a th:href="@{/projects/new}" class="btn btn-primary">+ New Project</a>
+        </div>
+
+        <div class="page-body">
+            <div th:if="${successMessage}" class="alert alert-success">
+                <span>✓</span>
+                <span th:text="${successMessage}"></span>
+            </div>
+
+            <div class="projects-grid" th:if="${projects != null && !projects.isEmpty()}">
+                <div class="project-card" th:each="project : ${projects}">
+                    <div class="project-card-header">
+                        <h3>
+                            <a th:href="@{/projects/{id}(id=${project.id})}" th:text="${project.name}">Project</a>
+                        </h3>
+                        <span class="badge"
+                              th:classappend="'badge-' + ${project.status.name().toLowerCase()}"
+                              th:text="${project.status.displayName}">Status</span>
+                    </div>
+                    <p class="project-card-desc"
+                       th:text="${project.description != null && !project.description.isEmpty() ? project.description : 'No description'}">
+                        Description
+                    </p>
+                    <div class="project-card-meta">
+                        <span th:if="${project.manager != null}">
+                            👤 <span th:text="${project.manager.name}">Manager</span>
+                        </span>
+                        <span th:if="${project.manager == null}" class="text-muted">No manager</span>
+                        <span th:text="${project.tasks.size()} + ' tasks'">0 tasks</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" data-progress="0"
+                             th:attr="data-progress=${project.progressPercent}"></div>
+                    </div>
+                    <div class="progress-label" th:text="${project.progressPercent} + '% complete'">0%</div>
+
+                    <div class="flex items-center gap-2 mt-2" style="justify-content: flex-end;">
+                        <a th:href="@{/projects/{id}/edit(id=${project.id})}" class="btn btn-secondary btn-sm">Edit</a>
+                        <form th:action="@{/projects/{id}/delete(id=${project.id})}" method="post"
+                              class="delete-form" style="display: inline;">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="empty-state" th:if="${projects == null || projects.isEmpty()}">
+                <div class="empty-icon">📁</div>
+                <h3>No projects yet</h3>
+                <p>Create your first project to start managing your work.</p>
+                <a th:href="@{/projects/new}" class="btn btn-primary">+ New Project</a>
+            </div>
+        </div>
+    </main>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

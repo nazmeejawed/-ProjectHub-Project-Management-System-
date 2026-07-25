@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${project.name} + ' — Project Manager'">Project Detail</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('projects')}"></div>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <button class="menu-toggle" id="menuToggle">☰</button>
+                <h2 th:text="${project.name}">Project Detail</h2>
+                <p>Project overview and tasks</p>
+            </div>
+            <div class="flex gap-2">
+                <a th:href="@{/tasks/new(projectId=${project.id})}" class="btn btn-primary">+ Add Task</a>
+                <a th:href="@{/projects/{id}/edit(id=${project.id})}" class="btn btn-secondary">Edit Project</a>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <!-- Project Meta -->
+            <div class="detail-meta">
+                <div class="detail-meta-item">
+                    <div class="label">Status</div>
+                    <div class="value">
+                        <span class="badge"
+                              th:classappend="'badge-' + ${project.status.name().toLowerCase()}"
+                              th:text="${project.status.displayName}">Status</span>
+                    </div>
+                </div>
+                <div class="detail-meta-item">
+                    <div class="label">Manager</div>
+                    <div class="value" th:text="${project.manager != null ? project.manager.name : 'Unassigned'}">—</div>
+                </div>
+                <div class="detail-meta-item">
+                    <div class="label">Start Date</div>
+                    <div class="value" th:text="${project.startDate != null ? project.startDate : '—'}">—</div>
+                </div>
+                <div class="detail-meta-item">
+                    <div class="label">End Date</div>
+                    <div class="value" th:text="${project.endDate != null ? project.endDate : '—'}">—</div>
+                </div>
+                <div class="detail-meta-item">
+                    <div class="label">Progress</div>
+                    <div class="value" th:text="${project.progressPercent} + '%'">0%</div>
+                    <div class="progress-bar mt-2">
+                        <div class="progress-bar-fill" data-progress="0"
+                             th:attr="data-progress=${project.progressPercent}"></div>
+                    </div>
+                </div>
+                <div class="detail-meta-item">
+                    <div class="label">Total Tasks</div>
+                    <div class="value" th:text="${tasks.size()}">0</div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="card mb-4" th:if="${project.description != null && !project.description.isEmpty()}">
+                <div class="card-title">Description</div>
+                <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.7;"
+                   th:text="${project.description}">Description</p>
+            </div>
+
+            <!-- Team Members -->
+            <div class="card mb-4" th:if="${project.members != null && !project.members.isEmpty()}">
+                <div class="card-title">Team Members</div>
+                <div class="flex gap-2" style="flex-wrap: wrap;">
+                    <div th:each="member : ${project.members}" class="flex items-center gap-2"
+                         style="background: var(--bg); padding: 6px 12px; border-radius: 100px;">
+                        <div class="member-avatar" style="width: 26px; height: 26px; font-size: 0.65rem;"
+                             th:text="${member.initials}">AB</div>
+                        <span style="font-size: 0.82rem; font-weight: 500;" th:text="${member.name}">Name</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tasks -->
+            <div class="card">
+                <div class="section-header">
+                    <h3>Tasks</h3>
+                    <a th:href="@{/tasks/new(projectId=${project.id})}" class="btn btn-primary btn-sm">+ Add Task</a>
+                </div>
+
+                <div th:if="${tasks != null && !tasks.isEmpty()}">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                    <th>Assignee</th>
+                                    <th>Deadline</th>
+                                    <th style="text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="task : ${tasks}">
+                                    <td>
+                                        <span class="table-link" th:text="${task.title}"
+                                              th:classappend="${task.overdue ? ' overdue' : ''}">Task</span>
+                                    </td>
+                                    <td>
+                                        <form th:action="@{/tasks/{id}/status(id=${task.id})}" method="post" style="display:inline;">
+                                            <select name="status" class="status-select">
+                                                <option th:each="s : ${T(com.projectmanager.model.TaskStatus).values()}"
+                                                        th:value="${s}" th:text="${s.displayName}"
+                                                        th:selected="${task.status == s}">Status</option>
+                                            </select>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <span class="badge"
+                                              th:classappend="'badge-' + ${task.priority.name().toLowerCase()}"
+                                              th:text="${task.priority.displayName}">Priority</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${task.assignee != null}" th:text="${task.assignee.name}">—</span>
+                                        <span th:if="${task.assignee == null}" class="text-muted">Unassigned</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${task.deadline != null}" th:text="${task.deadline}"
+                                              th:style="${task.overdue ? 'color: var(--danger); font-weight: 500;' : ''}">—</span>
+                                        <span th:if="${task.deadline == null}" class="text-muted">No deadline</span>
+                                    </td>
+                                    <td>
+                                        <div class="actions-cell">
+                                            <a th:href="@{/tasks/{id}/edit(id=${task.id})}" class="btn btn-secondary btn-sm btn-icon">✏️</a>
+                                            <form th:action="@{/tasks/{id}/delete(id=${task.id})}" method="post" class="delete-form">
+                                                <button type="submit" class="btn btn-danger btn-sm btn-icon">🗑️</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="empty-state" th:if="${tasks == null || tasks.isEmpty()}" style="padding: 30px 10px;">
+                    <div class="empty-icon">✅</div>
+                    <h3>No tasks yet</h3>
+                    <p>Add tasks to track progress for this project.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tasks — Project Manager</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('tasks')}"></div>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <button class="menu-toggle" id="menuToggle">☰</button>
+                <h2>Tasks</h2>
+                <p>Track and manage all tasks across projects</p>
+            </div>
+            <a th:href="@{/tasks/new}" class="btn btn-primary">+ New Task</a>
+        </div>
+
+        <div class="page-body">
+            <div th:if="${successMessage}" class="alert alert-success">
+                <span>✓</span>
+                <span th:text="${successMessage}"></span>
+            </div>
+
+            <div class="card" th:if="${tasks != null && !tasks.isEmpty()}">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Task</th>
+                                <th>Project</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Assignee</th>
+                                <th>Deadline</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="task : ${tasks}">
+                                <td>
+                                    <span class="table-link" th:text="${task.title}"
+                                          th:classappend="${task.overdue ? ' overdue' : ''}">Task</span>
+                                    <div th:if="${task.description != null && !task.description.isEmpty()}"
+                                         class="text-muted truncate" style="max-width: 250px;"
+                                         th:text="${task.description}">Desc</div>
+                                </td>
+                                <td>
+                                    <a th:href="@{/projects/{id}(id=${task.project.id})}" class="table-link"
+                                       th:text="${task.project.name}">Project</a>
+                                </td>
+                                <td>
+                                    <form th:action="@{/tasks/{id}/status(id=${task.id})}" method="post" style="display:inline;">
+                                        <select name="status" class="status-select">
+                                            <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.displayName}"
+                                                    th:selected="${task.status == s}">Status</option>
+                                        </select>
+                                    </form>
+                                </td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="'badge-' + ${task.priority.name().toLowerCase()}"
+                                          th:text="${task.priority.displayName}">Priority</span>
+                                </td>
+                                <td>
+                                    <span th:if="${task.assignee != null}" th:text="${task.assignee.name}">—</span>
+                                    <span th:if="${task.assignee == null}" class="text-muted">Unassigned</span>
+                                </td>
+                                <td>
+                                    <span th:if="${task.deadline != null}" th:text="${task.deadline}"
+                                          th:style="${task.overdue ? 'color: var(--danger); font-weight: 500;' : ''}">—</span>
+                                    <span th:if="${task.deadline == null}" class="text-muted">—</span>
+                                </td>
+                                <td>
+                                    <div class="actions-cell">
+                                        <a th:href="@{/tasks/{id}/edit(id=${task.id})}" class="btn btn-secondary btn-sm">Edit</a>
+                                        <form th:action="@{/tasks/{id}/delete(id=${task.id})}" method="post" class="delete-form">
+                                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="empty-state" th:if="${tasks == null || tasks.isEmpty()}">
+                <div class="empty-icon">✅</div>
+                <h3>No tasks yet</h3>
+                <p>Create tasks to start tracking your work.</p>
+                <a th:href="@{/tasks/new}" class="btn btn-primary">+ New Task</a>
+            </div>
+        </div>
+    </main>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>
