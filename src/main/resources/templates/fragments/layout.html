@@ -11,31 +11,7 @@
 <div class="app-layout" th:fragment="layout(content, activePage)">
 
     <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-brand">
-            <h1>
-                <span class="brand-icon">P</span>
-                Project Manager
-            </h1>
-        </div>
-        <nav class="sidebar-nav">
-            <div class="nav-label">Main</div>
-            <a th:href="@{/}" class="nav-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
-                <span class="nav-icon">📊</span> Dashboard
-            </a>
-            <a th:href="@{/projects}" class="nav-link" th:classappend="${activePage == 'projects' ? 'active' : ''}">
-                <span class="nav-icon">📁</span> Projects
-            </a>
-            <a th:href="@{/tasks}" class="nav-link" th:classappend="${activePage == 'tasks' ? 'active' : ''}">
-                <span class="nav-icon">✅</span> Tasks
-            </a>
-
-            <div class="nav-label">Organization</div>
-            <a th:href="@{/team}" class="nav-link" th:classappend="${activePage == 'team' ? 'active' : ''}">
-                <span class="nav-icon">👥</span> Team
-            </a>
-        </nav>
-    </aside>
+    <div th:replace="~{fragments/sidebar :: sidebar(${activePage})}"></div>
 
     <!-- Main Content -->
     <main class="main-content">
