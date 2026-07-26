@@ -3,9 +3,11 @@ package com.projectmanager.model;
 public enum Role {
     ADMIN("Admin"),
     MANAGER("Manager"),
+    PROJECT_MANAGER("Project Manager"),
     DEVELOPER("Developer"),
     DESIGNER("Designer"),
-    QA("QA Engineer");
+    QA("QA Engineer"),
+    TESTER("Tester");
 
     private final String displayName;
 

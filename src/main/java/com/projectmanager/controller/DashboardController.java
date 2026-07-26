@@ -15,7 +15,7 @@ public class DashboardController {
         this.dashboardService = dashboardService;
     }
 
-    @GetMapping("/")
+    @GetMapping({"/", "/dashboard"})
     public String dashboard(Model model) {
         Map<String, Object> stats = dashboardService.getDashboardStats();
         model.addAllAttributes(stats);
